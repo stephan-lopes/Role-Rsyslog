@@ -1,0 +1,41 @@
+---
+- name: Adiciona repositório no CentOS
+  ansible.builtin.get_url:
+    url: http://rpms.adiscon.com/v8-stable-daily/rsyslog-daily.repo
+    dest: /etc/yum.repos.d/rsyslog-daily.repo
+    mode: '0644'
+  when:
+    - ansible_distribution == "CentOS"
+    - ansible_distribution_major_version == "7"
+
+- name: Adiciona repositório no RedHat
+  ansible.builtin.get_url:
+    url: http://rpms.adiscon.com/v8-stable-daily/rsyslog-daily-rhel7.repo
+    dest: /etc/yum.repos.d/rsyslog-daily.repo
+    mode: '0644'
+  when:
+    - ansible_distribution == "RedHat"
+    - ansible_distribution_major_version == "7"
+
+- name: Instala a versão mais recente do Rsyslog
+  ansible.builtin.yum:
+    name: rsyslog
+    state: latest
+    update_cache: true
+  when: ansible_distribution == "RedHat" or ansible_distribution == "CentOS"
+
+
+- name: Cria Backup do arquivo de configuração do Rsyslog
+  ansible.builtin.copy:
+    src: /etc/rsyslog.conf
+    dest: /tmp/rsyslog.conf
+    backup: true
+    remote_src: true
+
+- name: Realiza a Configuração do Rsyslog
+  ansible.builtin.template:
+    src: ./templates/rsyslog.conf
+    dest: /etc/rsyslog.conf
+    mode: '0600'
+
+# - name: Checa se as configurações estão funcionando
