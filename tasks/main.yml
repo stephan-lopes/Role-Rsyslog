@@ -24,23 +24,13 @@
     update_cache: true
   when: ansible_distribution == "RedHat" or ansible_distribution == "CentOS"
 
-
-- name: "Verifica a existência do arquivo no destino - {{ item.dest }}"
-  ansible.builtin.stat:
-    path: "{{ item.dest }}"
-  register: file_exist
+- name: Cria Backups dos Arquivos
+  ansible.builtin.include_tasks: "backup_each.yml"
   loop: "{{ rsyslog_config }}"
+  loop_control:
+    loop_var: item
 
-- name: "Cria Backup do arquivo de configuração - {{ item.dest }}"
-  ansible.builtin.copy:
-    src: "{{ item.dest }}"
-    dest: "/tmp/{{ item.name }}"
-    backup: true
-    remote_src: true
-  loop: "{{ rsyslog_config }}"
-  when: (file_exist.stat.isreg is defined) and (file_exist.stat.isreg)
-
-- name: "Realiza a Configuração do Rsyslog - {{ item.dest }}"
+- name: "Realiza a Configuração do Rsyslog"
   ansible.builtin.template:
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"
