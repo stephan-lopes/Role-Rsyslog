@@ -25,15 +25,22 @@
   when: ansible_distribution == "RedHat" or ansible_distribution == "CentOS"
 
 
-- name: Cria Backup do arquivo de configuração do Rsyslog
+- name: "Verifica a existência do arquivo no destino - {{ item.dest }}"
+  ansible.builtin.stat:
+    path: "{{ item.dest }}"
+  register: file_exist
+  loop: "{{ rsyslog_config }}"
+
+- name: "Cria Backup do arquivo de configuração - {{ item.dest }}"
   ansible.builtin.copy:
     src: "{{ item.dest }}"
     dest: "/tmp/{{ item.name }}"
     backup: true
     remote_src: true
   loop: "{{ rsyslog_config }}"
+  when: (file_exist.stat.isreg is defined) and (file_exist.stat.isreg)
 
-- name: Realiza a Configuração do Rsyslog
+- name: "Realiza a Configuração do Rsyslog - {{ item.dest }}"
   ansible.builtin.template:
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"
